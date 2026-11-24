@@ -1,0 +1,73 @@
+POWER APPS (Canvas app) - COPY/PASTE FORMULAS
+=============================================
+Create: make.powerapps.com -> Create -> Blank app -> Blank canvas app -> name "SmartCampus-LowCode", format Phone (narrow) or Tablet -> Create.
+
+CONTROL NAMES (rename each control: click it, then edit the name in the Tree view on the left)
+  txtCurrent   Text input   Default: "08:00"      (label above: Current campus time HH:MM)
+  txtStart     Text input   Default: "10:00"      (label above: Start time HH:MM)
+  txtDuration  Text input   Default: "60"         (label above: Duration, minutes)
+  tglBlocked   Toggle       Default: false        (label above: Room blocked for maintenance)
+  btnCheck     Button       Text: "Check Availability"
+  lblDecision  Label        (big result text)
+  lblMessage   Label        (explanation text)
+  galBookings  Vertical gallery (Blank vertical) with one Label inside, for the bookings list
+
+--- 1) Screen1 -> OnVisible  (loads the fictional bookings; never changed afterwards) ---
+ClearCollect(
+    colBookings,
+    {BId: "B1", BLabel: "CS 201 Lecture", BStart: "09:00", BEnd: "10:00"},
+    {BId: "B2", BLabel: "Faculty Meeting",    BStart: "12:00", BEnd: "13:00"}
+)
+
+(Change "Faculty Meeting" to the same label as the 12:00-13:00 booking in your Bolt app.)
+
+--- 2) galBookings -> Items ---
+colBookings
+   Label inside the gallery -> Text:
+ThisItem.BLabel & "   " & ThisItem.BStart & "-" & ThisItem.BEnd
+
+--- 3) btnCheck -> OnSelect ---
+Set(varCur,   If(IsMatch(txtCurrent.Text, "([01]\d|2[0-3]):[0-5]\d"), Value(Left(txtCurrent.Text, 2)) * 60 + Value(Right(txtCurrent.Text, 2)), -1));
+Set(varStart, If(IsMatch(txtStart.Text,   "([01]\d|2[0-3]):[0-5]\d"), Value(Left(txtStart.Text, 2)) * 60 + Value(Right(txtStart.Text, 2)), -1));
+Set(varDur,   If(IsMatch(Trim(txtDuration.Text), "-?\d+(\.\d+)?"), Value(Trim(txtDuration.Text)), Blank()));
+Set(varEnd,   varStart + varDur);
+Set(varOverlap,
+    If(varCur >= 0 && varStart >= 0 && !IsBlank(varDur),
+        LookUp(colBookings,
+            varStart < Value(Left(BEnd, 2)) * 60 + Value(Right(BEnd, 2)) &&
+            Value(Left(BStart, 2)) * 60 + Value(Right(BStart, 2)) < varEnd),
+        Blank()));
+Set(varCode,
+    If(varCur < 0 || varStart < 0 || IsBlank(varDur), "INVALID_INPUT",
+       varDur <= 0 || varDur <> RoundDown(varDur, 0), "INVALID_DURATION",
+       varDur > 120, "TOO_LONG",
+       varStart <= varCur, "START_IN_PAST",
+       varEnd > 1440, "END_AFTER_MIDNIGHT",
+       tglBlocked.Value, "ROOM_BLOCKED",
+       !IsBlank(varOverlap), "OVERLAP",
+       "AVAILABLE"));
+Set(varMessage,
+    Switch(varCode,
+        "INVALID_INPUT", "Enter valid times in HH:MM format and the duration in whole minutes.",
+        "INVALID_DURATION", "Duration must be a whole number greater than zero.",
+        "TOO_LONG", "Duration cannot exceed 120 minutes.",
+        "START_IN_PAST", "Start time must be later than the current campus time.",
+        "END_AFTER_MIDNIGHT", "The booking must end by 24:00.",
+        "ROOM_BLOCKED", "Room is blocked for maintenance.",
+        "OVERLAP", "Overlaps existing booking """ & varOverlap.BLabel & """ (" & varOverlap.BStart & "-" & varOverlap.BEnd & ").",
+        "Available: Engineering 101 is free from " & txtStart.Text & " to " &
+            Right("0" & Text(RoundDown(varEnd / 60, 0)), 2) & ":" & Right("0" & Text(Mod(varEnd, 60)), 2) & "."))
+
+--- 4) lblDecision -> Text ---
+If(IsBlank(varCode), "", If(varCode = "AVAILABLE", "AVAILABLE", "UNAVAILABLE (" & varCode & ")"))
+    lblDecision -> Color
+If(varCode = "AVAILABLE", RGBA(21, 128, 61, 1), RGBA(185, 28, 28, 1))
+
+--- 5) lblMessage -> Text ---
+If(IsBlank(varCode), "Press Check Availability.", varMessage)
+
+NOTES
+- Run with F5 (Play) and click through T1-T8. Variables are created by Set() the first time the button is pressed.
+- Nothing ever writes to colBookings after OnVisible (no Patch/Collect/Remove), which is what T8 checks.
+- Narrow screens: choose Phone layout, then test with File -> Settings -> Display (Scale to fit / Orientation) or the Play window.
+- If Studio underlines a formula in red, send a screenshot of the error: the separator may be ";" vs "," depending on your language setting.
