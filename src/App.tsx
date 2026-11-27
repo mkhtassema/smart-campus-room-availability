@@ -90,6 +90,8 @@ export default function App() {
   };
 
   const handleReset = () => {
+    setRoomId(SAMPLE_ROOMS[0].id);
+    setDemoMode('normal');
     setStartTime('11:00');
     setDuration(DEFAULT_DURATION);
     setSimulateBlocked(false);
@@ -127,10 +129,11 @@ export default function App() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Room selection */}
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="room-select" className="block text-sm font-medium text-slate-700 mb-1">
                 Select Room
               </label>
               <select
+                id="room-select"
                 value={roomId}
                 onChange={(e) => { setRoomId(e.target.value); clearDecision(); }}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition"
@@ -146,11 +149,12 @@ export default function App() {
 
             {/* Current time */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-1.5">
+              <label htmlFor="current-time" className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-1.5">
                 <Clock className="w-4 h-4 text-slate-400" />
                 Current Campus Time
               </label>
               <input
+                id="current-time"
                 type="time"
                 value={currentTime}
                 onChange={(e) => { setCurrentTime(e.target.value); clearDecision(); }}
@@ -160,10 +164,11 @@ export default function App() {
 
             {/* Start time */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="start-time" className="block text-sm font-medium text-slate-700 mb-1">
                 Requested Start
               </label>
               <input
+                id="start-time"
                 type="time"
                 value={startTime}
                 onChange={(e) => { setStartTime(e.target.value); clearDecision(); }}
@@ -173,10 +178,11 @@ export default function App() {
 
             {/* Duration (minutes) */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="duration" className="block text-sm font-medium text-slate-700 mb-1">
                 Duration (minutes)
               </label>
               <input
+                id="duration"
                 type="number"
                 min={1}
                 max={120}
@@ -206,10 +212,11 @@ export default function App() {
 
           {/* Demo adapter mode */}
           <div className="mt-4">
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="demo-mode" className="block text-sm font-medium text-slate-700 mb-1">
               Demo adapter mode
             </label>
             <select
+              id="demo-mode"
               value={demoMode}
               onChange={(e) => setDemoMode(e.target.value as DemoMode)}
               className="w-full sm:w-64 rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition"

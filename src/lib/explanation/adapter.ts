@@ -136,6 +136,14 @@ export function validateExplanationOutput(
   ) {
     return 'the explanation invents information that was not supplied';
   }
+  // The text must positively state the decision it explains (keyword blacklists alone miss paraphrases).
+  if (input.isAvailable) {
+    if (!/\b(available|free)\b/.test(lower)) {
+      return 'the explanation does not state that the room is available';
+    }
+  } else if (!/\bnot\s+available\b|\bunavailable\b|\bnot\s+free\b|\bcannot\b/.test(lower)) {
+    return 'the explanation does not state that the room is unavailable';
+  }
   if (input.isAvailable) {
     if (/\bnot\s+available\b|\bunavailable\b|\bnot\s+free\b|\bblocked\b|\boverlap|\bconflict\b/.test(lower)) {
       return 'the explanation contradicts the availability status';

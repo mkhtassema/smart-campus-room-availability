@@ -56,7 +56,9 @@ export function decideBookingRequest(
   input: RequestInput,
   room: RoomLike
 ): RequestDecision {
-  const pre = validateBookingRequest(input, room.bookings);
+  // The room's own data flag and the "simulate blocked" checkbox both block it.
+  const blocked = input.blocked || room.blocked;
+  const pre = validateBookingRequest({ ...input, blocked }, room.bookings);
   if (pre.reasonCode !== 'OK' && pre.reasonCode !== 'ROOM_BLOCKED' && pre.reasonCode !== 'OVERLAP') {
     return pre;
   }
@@ -64,7 +66,7 @@ export function decideBookingRequest(
   const c = timeStringToMinutes(input.currentTime)!;
   const end = s + (input.durationMinutes as number);
   const engineResult: ValidationResult = checkAvailability(
-    { ...room, blocked: input.blocked } as Room,
+    { ...room, blocked } as Room,
     s,
     end,
     c
