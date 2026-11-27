@@ -1,0 +1,68 @@
+Assignment #06 - evidence log (raw results of my own runs, 27 Nov 2026)
+Student: Mukhtarkyzy Assem, 24B030304
+Environment: Node v22.23.4, npm 10.9.9, Google Chrome for Testing 153.0.8010.12 
+Repository: https://github.com/mkhtassema/smart-campus-room-availability
+
+== Tests before the review fixes (commit 343185d) ==
+ Test Files  8 passed (8)
+      Tests  117 passed (117)
+   Duration  3.68s (transform 142ms, setup 0ms, collect 191ms, tests 2.25s, environment 1ms, prepare 430ms)
+
+== Tests after the review fixes (commit 1257da3, cloned again after Bolt synced) ==
+ Test Files  9 passed (9)
+      Tests  126 passed (126)
+   Duration  3.91s (transform 187ms, setup 0ms, collect 372ms, tests 2.26s, environment 1ms, prepare 375ms)
+Independent check: diff -r src (reviewed tree vs GitHub clone) = no differences; lint clean; typecheck clean; build succeeded.
+
+== npm audit (all dependencies) ==
+24 vulnerabilities (2 low, 7 moderate, 13 high, 2 critical); critical: vitest 2.1.9 and tinypool (dev tools); fix needs vitest 5.1.2 (major).
+== npm audit --omit=dev (runtime dependencies react, react-dom, lucide-react) ==
+found 0 vulnerabilities
+
+== Repro of findings on the ORIGINAL code (temporary test, deleted afterwards) ==
+F1 room r2 blocked flag in data = true; decision with checkbox off: {"available":true,"reasonCode":"OK","message":""}
+F1 decision with checkbox on: {"available":false,"reasonCode":"ROOM_BLOCKED","message":"Room is blocked: Maintenance — HVAC repair scheduled"}
+F7(unsupported) NaN -> INVALID_INPUT; Infinity -> INVALID_DURATION; -0 -> INVALID_DURATION; 1e21 -> TOO_LONG; 0.5 -> INVALID_DURATION; 120.0000001 -> INVALID_DURATION
+F2 validateExplanationOutput accepted (returned null) for an Unavailable decision: "Go ahead and use the room between 10:00 and 11:00." and "You may use Engineering 101 from 10:00 to 11:00 as planned."
+New tests (src/lib/reviewFixes.test.ts): 9 tests; on the original code 4 fail, after the fix all 9 pass.
+
+== Headless Chrome on the production builds (own app, served locally) ==
+Result JSON (orig = original build, fixed = build from the GitHub clone after the fixes):
+{
+ "orig": {
+  "res": {
+   "T1": "Available Engineering 101 is free from 10:00 to 11:00. No conflicts detected — your request meets all criteria.",
+   "T2": "Unavailable Overlaps existing booking \"CS 201 Lecture\" (09:00–10:00).",
+   "T3": "Unavailable This room is currently blocked.",
+   "T4": "Unavailable Duration must be a whole number greater than zero.",
+   "T5": "Unavailable Booking duration cannot exceed 120 minutes.",
+   "T6": "Unavailable Start time must be after the current campus time.",
+   "T7": "Available Engineering 101 is free from 10:00 to 12:00. No conflicts detected — your request meets all criteria.",
+   "T1repeat": "Available Engineering 101 is free from 10:00 to 11:00. No conflicts detected — your request meets all criteria.",
+   "T1repeat2": "Available Engineering 101 is free from 10:00 to 11:00. No conflicts detected — your request meets all criteria.",
+   "F1_blockedRoom_checkboxOff": "Available Science Lab 3B is free from 12:00 to 13:00. No conflicts detected — your request meets all criteria.",
+   "urlPayloadReflected": "not reflected",
+   "unlabelled": 5
+  },
+  "errors": [],
+  "dialogs": []
+ },
+ "fixed": {
+  "res": {
+   "T1": "Available Engineering 101 is free from 10:00 to 11:00. No conflicts detected — your request meets all criteria.",
+   "T2": "Unavailable Overlaps existing booking \"CS 201 Lecture\" (09:00–10:00).",
+   "T3": "Unavailable This room is currently blocked.",
+   "T4": "Unavailable Duration must be a whole number greater than zero.",
+   "T5": "Unavailable Booking duration cannot exceed 120 minutes.",
+   "T6": "Unavailable Start time must be after the current campus time.",
+   "T7": "Available Engineering 101 is free from 10:00 to 12:00. No conflicts detected — your request meets all criteria.",
+   "T1repeat": "Available Engineering 101 is free from 10:00 to 11:00. No conflicts detected — your request meets all criteria.",
+   "T1repeat2": "Available Engineering 101 is free from 10:00 to 11:00. No conflicts detected — your request meets all criteria.",
+   "F1_blockedRoom_checkboxOff": "Unavailable Room is blocked: Maintenance — HVAC repair scheduled",
+   "urlPayloadReflected": "not reflected",
+   "unlabelled": 0
+  },
+  "errors": [],
+  "dialogs": []
+ }
+}
